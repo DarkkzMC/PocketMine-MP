@@ -1305,6 +1305,54 @@ class Level implements ChunkManager, Metadatable{
 	}
 
 	/**
+	 * Returns the percentage of a circle away from noon the sun is currently at. This can be multiplied by 2 * M_PI to
+	 * get an angle in radians, or by 360 to get an angle in degrees.
+	 *
+	 * @return float
+	 */
+	public function getSunAnglePercentage() : float{
+		$timeProgress = ($this->time % 24000) / 24000;
+
+		//0.0 needs to be high noon, not dusk
+		$sunProgress = $timeProgress + ($timeProgress < 0.25 ? 0.75 : -0.25);
+
+		//Offset the sun progress to be above the horizon longer at dusk and dawn
+		//this is roughly an inverted sine curve, which pushes the sun progress back at dusk and forwards at dawn
+		$diff = (((1 - ((cos($sunProgress * M_PI) + 1) / 2)) - $sunProgress) / 3);
+
+		return $sunProgress + $diff;
+	}
+
+	/**
+	 * Returns the current sun angle in radians.
+	 * @return float
+	 */
+	public function getSunAngleRadians() : float{
+		return $this->getSunAnglePercentage() * 2 * M_PI;
+	}
+
+	/**
+	 * Returns the current sun angle in degrees.
+	 * @return float
+	 */
+	public function getSunAngleDegrees() : float{
+		return $this->getSunAnglePercentage() * 360.0;
+	}
+
+	/**
+	 * Returns how many points of sky light is subtracted based on the current time. Used to offset raw chunk sky light
+	 * to get a real light value.
+	 *
+	 * @return int
+	 */
+	public function getSkyLightReduction() : int{
+		$percentage = -(cos($this->getSunAngleRadians()) * 2 - 0.5);
+		//TODO: check rain and thunder level
+
+		return (int) ($percentage * 11);
+	}
+
+	/**
 	 * @param $x
 	 * @param $y
 	 * @param $z
