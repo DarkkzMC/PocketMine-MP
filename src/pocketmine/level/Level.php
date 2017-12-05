@@ -1295,8 +1295,7 @@ class Level implements ChunkManager, Metadatable{
 	}
 
 	public function getFullLightAt(int $x, int $y, int $z) : int{
-		//TODO: decrease light level by time of day
-		$skyLight = $this->getBlockSkyLightAt($x, $y, $z);
+		$skyLight = $this->getRealBlockSkyLightAt($x, $y, $z);
 		if($skyLight < 15){
 			return max($skyLight, $this->getBlockLightAt($x, $y, $z));
 		}else{
@@ -1350,6 +1349,20 @@ class Level implements ChunkManager, Metadatable{
 		//TODO: check rain and thunder level
 
 		return (int) ($percentage * 11);
+	}
+
+	/**
+	 * Returns the sky light level at the specified coordinates, offset by the current time and weather.
+	 *
+	 * @param int $x
+	 * @param int $y
+	 * @param int $z
+	 *
+	 * @return int 0-15
+	 */
+	public function getRealBlockSkyLightAt(int $x, int $y, int $z) : int{
+		$light = $this->getBlockSkyLightAt($x, $y, $z) - $this->getSkyLightReduction();
+		return $light < 0 ? 0 : $light;
 	}
 
 	/**
